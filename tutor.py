@@ -79,7 +79,7 @@ st.subheader("Programa de formación en Matemática Olímpica de alto nivel")
 # (Aquí sigue el resto de tu código de chat...)
 
 # --- AQUÍ VA TU LLAVE ---
-API_KEY = "AIzaSyDcnZLrxMEsOHw-pTjRoy1O4kwdDDkJJ8A"
+API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=API_KEY)
 
 # --- INSTRUCCIONES DEL SISTEMA ---
