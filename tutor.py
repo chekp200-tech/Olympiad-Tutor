@@ -80,7 +80,7 @@ st.subheader("Programa de formación en Matemática Olímpica de alto nivel")
 
 # --- AQUÍ VA TU LLAVE ---
 API_KEY = st.secrets["GOOGLE_API_KEY"]
-genai.configure(api_key=API_KEY)
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # --- INSTRUCCIONES DEL SISTEMA ---
 instrucciones_socraticas = """
