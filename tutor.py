@@ -37,7 +37,7 @@ st.markdown("""
 # --- BARRA LATERAL (SIDEBAR) ---
 with st.sidebar:
     # NUEVO LOGO SERIO AQUÍ (luego de diseñarlo)
-    # st.image("tu_nuevo_logo.png", width=120)
+    # st.image("28650.png", width=120)
     
     st.markdown("---")
     
@@ -117,6 +117,5 @@ import google.generativeai as genai
 
 genai.configure(api_key="AIzaSyDcnZLrxMEsOHw-pTjRoy1O4kwdDDkJJ8A")
 
-for m in genai.list_models():
-    print(m.name)
+
 
