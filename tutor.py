@@ -52,7 +52,7 @@ REGLAS ABSOLUTAS:
 # Inicializar modelo y sesión de chat (para que recuerde el historial)
 if "chat_session" not in st.session_state:
     model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash", 
+        model_name="gemini-1.5-flash-8b", 
         system_instruction=instrucciones_socraticas
     )
     st.session_state.chat_session = model.start_chat(history=[])
