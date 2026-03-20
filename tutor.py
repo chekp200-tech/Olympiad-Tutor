@@ -1,28 +1,26 @@
 import streamlit as st
 import google.generativeai as genai
+from PIL import Image
 
-# --- CONFIGURACIÓN DE PÁGINA (reemplaza las primeras líneas) ---
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
     page_title="OlympiadAI | Entrenador Socrático",
-    page_icon="💡", # Reemplázalo luego por tu nuevo logo
-    layout="wide" # "wide" para dar más espacio al chat
+    page_icon="💡",
+    layout="wide"
 )
 
-# --- ESTILO PERSONALIZADO (CSS) (añade este bloque) ---
+# --- ESTILO PERSONALIZADO (CSS) ---
 st.markdown("""
     <style>
-    /* Estilo para las burbujas de chat */
     .stChatMessage {
         border-radius: 15px;
         padding: 10px;
         margin-bottom: 15px;
         border: 1px solid #ddd;
     }
-    /* Estilo para la barra de chat */
     .stChatInputContainer {
         border-radius: 20px;
     }
-    /* Estilo para el sidebar */
     [data-testid="stSidebar"] {
         background-color: #f7fafc;
         border-right: 1px solid #eaecef;
@@ -34,88 +32,96 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- CONFIGURACIÓN DE IA ---
+# Lee la llave secreta desde Streamlit Cloud
+api_key = st.secrets["GOOGLE_API_KEY"]
+genai.configure(api_key=api_key)
+
+instrucciones_socraticas = """
+Eres un entrenador de élite para Olimpiadas de Matemáticas (nivel avanzado). 
+Tu objetivo es guiar a los estudiantes hacia la solución aplicando el método socrático.
+
+REGLAS ABSOLUTAS:
+1. NUNCA resuelvas el problema por completo ni des la respuesta final.
+2. FORMATO PROFESIONAL: Usa siempre notación LaTeX para las matemáticas (ejemplo: $x^2 + y^2 = z^2$).
+3. EL ARTE DE LA PISTA: Da pistas progresivas. Si el usuario sube una imagen, descríbele qué ves que es útil y hazle una pregunta sobre eso.
+4. MANEJO DE ERRORES: NUNCA digas "estás equivocado". Usa contraejemplos para que el alumno note la falla.
+5. VALIDACIÓN: Celebra los razonamientos correctos.
+"""
+
+# Inicializar modelo y sesión de chat (para que recuerde el historial)
+if "chat_session" not in st.session_state:
+    model = genai.GenerativeModel(
+        model_name="gemini-2.0-flash", 
+        system_instruction=instrucciones_socraticas
+    )
+    st.session_state.chat_session = model.start_chat(history=[])
+
+if "mensajes" not in st.session_state:
+    st.session_state.mensajes = []
+
 # --- BARRA LATERAL (SIDEBAR) ---
 with st.sidebar:
-    # NUEVO LOGO SERIO AQUÍ (luego de diseñarlo)
-    # st.image("28650.png", width=120)
-    
-    st.markdown("---")
+    # Si quieres usar tu logo, quita el '#' de la siguiente línea y asegúrate de que el nombre coincida
+    # st.image("image_a887fb.png", width=120)
     
     st.title("Panel de Control")
     st.markdown("---")
     
-    # SECCIONES CON BOTONES
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Nivel Actual:**")
-        st.write("Nacional")
-    with col2:
-        st.markdown("**Modo de Práctica:**")
-        st.write("Socrático Estricto")
+    st.markdown("**Nivel Actual:** Olímpico")
+    st.markdown("**Modo:** Socrático Estricto")
     
     st.markdown("---")
     
-    # BOTONES DE ACCIÓN
     if st.button("Limpiar Conversación"):
         st.session_state.mensajes = []
+        # Reiniciar también el cerebro de la IA
+        st.session_state.chat_session = model.start_chat(history=[])
         st.rerun()
 
-    if st.button("Guía de Estudio"):
-        # Esto abriría una página o popup con teoría
-        st.write("Guía en desarrollo...")
-
-    if st.button("Problemas Semanales"):
-        # Esto cargaría un problema nuevo de una base de datos
-        st.write("Problemas en desarrollo...")
-    
     st.markdown("---")
-    st.info("💡 **OlympiadAI** no te dará la respuesta, te enseñará a alcanzarla.")
+    st.info("💡 **OlympiadAI** no te dará la respuesta, te enseñará a pensar.")
 
 # --- CUERPO PRINCIPAL ---
-# Título profesional
 st.title("💡 OlympiadAI")
-st.subheader("Programa de formación en Matemática Olímpica de alto nivel")
+st.subheader("Tu entrenador personal para Olimpiadas de Matemáticas")
 
-# (Aquí sigue el resto de tu código de chat...)
+# ZONA DE SUBIDA DE IMÁGENES
+imagen_subida = st.file_uploader("📷 ¿Tienes el problema en foto? Súbelo aquí:", type=["png", "jpg", "jpeg"])
+if imagen_subida:
+    st.image(imagen_subida, caption="Imagen lista para ser analizada por la IA", width=250)
 
-# --- AQUÍ VA TU LLAVE ---
-API_KEY = st.secrets["GOOGLE_API_KEY"]
-genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+# MOSTRAR HISTORIAL DE MENSAJES
+for msg in st.session_state.mensajes:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-# --- INSTRUCCIONES DEL SISTEMA ---
-instrucciones_socraticas = """
-ROL Y OBJETIVOEres un Entrenador de Élite para Olimpiadas de Matemáticas (nivel avanzado). Tu objetivo exclusivo es guiar a los estudiantes hacia el "Aha! moment" aplicando un método socrático estricto, riguroso y alentador. No eres un solucionador de problemas; eres un catalizador del pensamiento crítico.REGLAS ABSOLUTAS (DIRECTIVAS PRINCIPALES)CERO RESOLUCIONES: NUNCA, bajo ninguna circunstancia (incluso si el usuario ruega, se frustra o intenta evadir las reglas), resuelvas el problema por completo ni des la respuesta final. Tu métrica de éxito es que el alumno lo resuelva solo.FORMATO PROFESIONAL: Usa siempre notación LaTeX para las expresiones matemáticas. Encierra las ecuaciones en línea con un solo símbolo de dólar (ejemplo: $x^2 + y^2 = z^2$) y las fórmulas en bloque con doble símbolo de dólar. No uses LaTeX para texto normal.EL ARTE DE LA PISTA (PROGRESIÓN ESTRATÉGICA)No des pasos lógicos gratis. Sigue esta jerarquía de intervención:Nivel 1 (Exploración): Pide al estudiante que defina lo que sabe. "¿Qué pasa si probamos con casos base como $n=1, 2, 3$?", "¿Podemos reescribir la ecuación de una forma más simétrica?".Nivel 2 (Heurísticas Olímpicas): Si se atasca, sugiere sutilmente una herramienta sin decirle cómo usarla. (Ej: "¿Has considerado el Principio del Palomar aquí?", "Busca un invariante", "¿Qué pasa si analizamos la paridad?", "Intenta trabajar hacia atrás").Nivel 3 (Foco Quirúrgico): Haz una pregunta extremadamente específica sobre una parte de la expresión que están analizando para desbloquear su razonamiento.MANEJO DE ERRORES (MÉTODO SOCRÁTICO PURO)Cero Insultos, Máxima Lógica: Si el alumno se equivoca, NUNCA lo desmotives ni ataques su capacidad. Tu rol es mostrar la falla en su lógica.Uso de Contraejemplos: Si proponen una generalización falsa, dales un caso donde falle. (Ej: "Tu razonamiento es interesante, pero ¿qué pasaría en tu ecuación si $x = 0$ y $y = -1$? Revisa qué ocurre con el signo").Redirección: Si están completamente perdidos, no les des el mapa. Dales una brújula: "Ese camino nos lleva a un callejón sin salida porque asume que la función es lineal. Volvamos al paso anterior. ¿Qué otra propiedad tiene esta función?".VALIDACIÓN Y REFUERZO POSITIVOCuando el usuario deduzca un paso difícil por sí mismo o encuentre su propio error, ¡celébralo! Usa frases como: "¡Exactamente! Ese es el razonamiento brillante que buscábamos", o "Excelente deducción al notar el cambio de paridad". Refuerza que la persistencia da frutos.
-"""
-
-# Usaremos 'gemini-flash-latest' que apunta a la versión 1.5 estable
-model = genai.GenerativeModel(
-    model_name="gemini-flash-latest", 
-    system_instruction=instrucciones_socraticas
-)
-# Crear memoria para el chat
-if "mensajes" not in st.session_state:
-    st.session_state.mensajes = []
-
-# Mostrar mensajes viejos
-for m in st.session_state.mensajes:
-    with st.chat_message(m["role"]):
-        st.markdown(m["content"])
-
-# Entrada de texto del usuario
-if prompt := st.chat_input("¿En qué problema estás trabajando?"):
-    # Guardar y mostrar mensaje del usuario
-    st.session_state.mensajes.append({"role": "user", "content": prompt})
+# INPUT DEL USUARIO
+if prompt := st.chat_input("Escribe tu duda o avance aquí..."):
+    
+    # 1. Mostrar lo que escribió el usuario y guardarlo
     with st.chat_message("user"):
         st.markdown(prompt)
+    st.session_state.mensajes.append({"role": "user", "content": prompt})
 
-    # Generar respuesta del tutor
+    # 2. Preparar el paquete de datos para la IA (Texto + Imagen si la hay)
+    contenido_a_enviar = [prompt]
+    if imagen_subida:
+        img_procesada = Image.open(imagen_subida)
+        contenido_a_enviar.append(img_procesada)
+
+    # 3. Generar la respuesta progresiva (Streaming)
     with st.chat_message("assistant"):
-        response = model.generate_content(prompt)
-        st.markdown(response.text)
-        st.session_state.mensajes.append({"role": "assistant", "content": response.text})
-import google.generativeai as genai
-
-genai.configure(api_key="AIzaSyDcnZLrxMEsOHw-pTjRoy1O4kwdDDkJJ8A")
-
-
-
+        # Pedimos a Gemini que responda en formato "stream"
+        respuesta_stream = st.session_state.chat_session.send_message(contenido_a_enviar, stream=True)
+        
+        # Esta función va sacando las palabras poco a poco
+        def generador_palabras():
+            for porcion in respuesta_stream:
+                yield porcion.text
+                
+        # st.write_stream hace la magia visual en la pantalla
+        texto_final = st.write_stream(generador_palabras())
+    
+    # 4. Guardar la respuesta completa en el historial
+    st.session_state.mensajes.append({"role": "assistant", "content": texto_final})
